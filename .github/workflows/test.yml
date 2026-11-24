@@ -1,4 +1,3 @@
-
 name: Shorts Factory
 
 on:
@@ -9,15 +8,15 @@ on:
 
 jobs:
   test:
-    name: Test Python Environment
+    name: Test Gemini Connection
     runs-on: ubuntu-latest
 
     steps:
       - name: Download repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Install Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: "3.11"
 
@@ -25,4 +24,6 @@ jobs:
         run: pip install -r requirements.txt
 
       - name: Run application
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: python main.py
