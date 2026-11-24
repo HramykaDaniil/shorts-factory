@@ -1,5 +1,7 @@
 
+
 import os
+import time
 from google import genai
 from google.genai.errors import ServerError
 
@@ -12,34 +14,35 @@ def main():
 
     client = genai.Client(api_key=api_key)
 
-    models = [
-        "gemini-3.8-flash",
-        "gemini-3.7-flash",
-    ]
+    model = "gemini-flash-lite-latest"
 
     prompt = (
         "Ответь одной короткой фразой на русском: "
         "Gemini успешно подключён к Shorts Factory."
     )
 
-    for model in models:
+    for attempt in range(1, 4):
         try:
-            print(f"Connecting to {model}...")
+            print(f"Connecting to {model}, attempt {attempt}...")
 
             response = client.models.generate_content(
                 model=model,
                 contents=prompt,
             )
 
-            print(f"Successfully connected to {model}")
-            print("Gemini response:")
+            print("Gemini connection successful!")
             print(response.text)
             return
 
         except ServerError as error:
-            print(f"{model} is temporarily unavailable: {error}")
+            print(f"Gemini server error: {error}")
 
-    raise RuntimeError("All Gemini models are currently unavailable")
+            if attempt < 3:
+                delay = attempt * 20
+                print(f"Retrying in {delay} seconds...")
+                time.sleep(delay)
+
+    raise RuntimeError("Gemini API unavailable after 3 attempts")
 
 
 if __name__ == "__main__":
