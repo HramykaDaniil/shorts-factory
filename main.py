@@ -1,9 +1,5 @@
-
-
 import os
-import time
-from google import genai
-from google.genai.errors import ServerError
+import requests
 
 
 def main():
@@ -12,37 +8,32 @@ def main():
     if not api_key:
         raise RuntimeError("GEMINI_API_KEY is not configured")
 
-    client = genai.Client(api_key=api_key)
+    url = "https://generativelanguage.googleapis.com/v1beta/models"
 
-    model = "gemini-flash-lite-latest"
-
-    prompt = (
-        "Ответь одной короткой фразой на русском: "
-        "Gemini успешно подключён к Shorts Factory."
+    response = requests.get(
+        url,
+        headers={"x-goog-api-key": api_key},
+        timeout=30,
     )
 
-    for attempt in range(1, 4):
-        try:
-            print(f"Connecting to {model}, attempt {attempt}...")
+    print("API status:", response.status_code)
+    response.raise_for_status()
 
-            response = client.models.generate_content(
-                model=model,
-                contents=prompt,
+    models = response.json().get("models", [])
+
+    print("\nAvailable models supporting generateContent:\n")
+
+    for model in models:
+        methods = model.get("supportedGenerationMethods", [])
+
+        if "generateContent" in methods:
+            print(
+                model.get("name"),
+                "|",
+                model.get("displayName")
             )
 
-            print("Gemini connection successful!")
-            print(response.text)
-            return
-
-        except ServerError as error:
-            print(f"Gemini server error: {error}")
-
-            if attempt < 3:
-                delay = attempt * 20
-                print(f"Retrying in {delay} seconds...")
-                time.sleep(delay)
-
-    raise RuntimeError("Gemini API unavailable after 3 attempts")
+    print("\nModel list completed.")
 
 
 if __name__ == "__main__":
