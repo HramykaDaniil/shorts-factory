@@ -1,5 +1,6 @@
+
 import os
-import requests
+from google import genai
 
 
 def main():
@@ -8,32 +9,25 @@ def main():
     if not api_key:
         raise RuntimeError("GEMINI_API_KEY is not configured")
 
-    url = "https://generativelanguage.googleapis.com/v1beta/models"
+    client = genai.Client(api_key=api_key)
 
-    response = requests.get(
-        url,
-        headers={"x-goog-api-key": api_key},
-        timeout=30,
+    model = "gemini-3.5-flash-lite"
+
+    print(f"Connecting to {model}...")
+
+    response = client.models.generate_content(
+        model=model,
+        contents=(
+            "Ответь одной короткой фразой на русском: "
+            "Gemini успешно подключён к Shorts Factory."
+        ),
     )
 
-    print("API status:", response.status_code)
-    response.raise_for_status()
+    if not response.text:
+        raise RuntimeError("Gemini returned an empty response")
 
-    models = response.json().get("models", [])
-
-    print("\nAvailable models supporting generateContent:\n")
-
-    for model in models:
-        methods = model.get("supportedGenerationMethods", [])
-
-        if "generateContent" in methods:
-            print(
-                model.get("name"),
-                "|",
-                model.get("displayName")
-            )
-
-    print("\nModel list completed.")
+    print("\nGemini connection successful!")
+    print(response.text)
 
 
 if __name__ == "__main__":
